@@ -1,0 +1,13 @@
+node_modules/
+coverage/
+.env
+*.pem
+*.key
+.vault_pass
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+crash.log
+# Ansible
+*.retry
