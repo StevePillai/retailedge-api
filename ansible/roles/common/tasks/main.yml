@@ -1,0 +1,51 @@
+---
+- name: Read the current timezone
+  ansible.builtin.command: timedatectl show --property=Timezone --value
+  register: current_tz
+  changed_when: false
+
+- name: Set timezone
+  ansible.builtin.command: timedatectl set-timezone Asia/Kolkata
+  when: current_tz.stdout != 'Asia/Kolkata'
+
+- name: Apply pending security updates
+  ansible.builtin.dnf:
+    name: "*"
+    security: true
+    state: latest
+    lock_timeout: 180
+
+- name: Make sure NTP (chrony) is running
+  ansible.builtin.systemd:
+    name: chronyd
+    enabled: true
+    state: started
+
+- name: Harden SSH (no root login, no passwords)
+  ansible.builtin.copy:
+    dest: /etc/ssh/sshd_config.d/00-hardening.conf
+    content: |
+      PermitRootLogin no
+      PasswordAuthentication no
+    mode: "0600"
+  notify: Restart sshd
+
+- name: Install the CloudWatch agent
+  ansible.builtin.dnf:
+    name: amazon-cloudwatch-agent
+    state: present
+    lock_timeout: 180
+
+- name: Copy CloudWatch agent configuration
+  ansible.builtin.copy:
+    src: cloudwatch-agent.json
+    dest: /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json
+    mode: "0644"
+  register: cw_config
+
+- name: Load the configuration and (re)start the CloudWatch agent
+  ansible.builtin.command: >
+    /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl
+    -a fetch-config -m ec2 -s
+    -c file:/opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json
+  when: cw_config.changed

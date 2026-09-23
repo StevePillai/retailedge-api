@@ -1,0 +1,40 @@
+---
+- name: Install Docker and pip
+  ansible.builtin.dnf:
+    name:
+      - docker
+      - python3-pip
+    state: present
+    lock_timeout: 180
+
+- name: Install the Docker SDK for Python (needed by community.docker modules)
+  ansible.builtin.pip:
+    name: docker
+    executable: pip3
+    state: present
+
+- name: Configure the Docker daemon (rotate container logs)
+  ansible.builtin.copy:
+    dest: /etc/docker/daemon.json
+    content: |
+      {
+        "log-driver": "json-file",
+        "log-opts": { "max-size": "10m", "max-file": "3" }
+      }
+    mode: "0644"
+  notify: Restart docker
+
+- name: Apply Docker changes now, before the app is started
+  ansible.builtin.meta: flush_handlers
+
+- name: Enable and start Docker
+  ansible.builtin.systemd:
+    name: docker
+    enabled: true
+    state: started
+
+- name: Let ec2-user run docker commands
+  ansible.builtin.user:
+    name: ec2-user
+    groups: docker
+    append: true

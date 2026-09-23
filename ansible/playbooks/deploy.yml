@@ -1,0 +1,19 @@
+---
+- name: Deploy RetailEdge API to EC2
+  hosts: app_servers
+  become: yes
+  gather_facts: false
+
+  pre_tasks:
+    - name: Wait until the new server accepts SSH connections
+      ansible.builtin.wait_for_connection:
+        delay: 5
+        timeout: 300
+
+    - name: Gather facts
+      ansible.builtin.setup:
+
+  roles:
+    - common
+    - docker
+    - app

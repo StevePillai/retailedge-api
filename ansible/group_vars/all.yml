@@ -1,0 +1,16 @@
+---
+# Shared variables for every environment
+ecr_registry: "905630096449.dkr.ecr.ap-south-1.amazonaws.com"
+container_name: "retailedge-api"
+host_port: 3000
+db_host: "localhost"
+
+# Encrypted with: ansible-vault encrypt_string 'YourPassword' --name vault_db_password
+# (paste the generated block here, replacing this placeholder)
+vault_db_password: !vault |
+          $ANSIBLE_VAULT;1.1;AES256
+          34353630303135303030326130353130396232623464383735333131633031343930363064643261
+          6461306663646335653131623264363066653837636238300a303364306531633063366530386239
+          38663032616561313631303239363432336433643933663939663434633931383833633739363237
+          3231656638656136330a333137396638663265323130353639313037616539313133373035313633
+          6237

@@ -1,0 +1,53 @@
+---
+- name: Make sure an image tag was provided
+  ansible.builtin.assert:
+    that:
+      - image_tag is defined
+      - image_tag | length > 0
+    fail_msg: "Pass the tag with -e image_tag=<git-sha>"
+
+- name: Look for a container that is already running
+  community.docker.docker_container_info:
+    name: "{{ container_name }}"
+  register: current_container
+
+- name: Remember the previous image tag (rollback.yml reads it)
+  ansible.builtin.copy:
+    content: "{{ current_container.container.Config.Image.split(':')[-1] }}"
+    dest: /etc/retailedge_previous_tag
+    mode: "0644"
+  when:
+    - current_container.exists
+    - current_container.container.Config.Image.split(':')[-1] != image_tag
+
+- name: Authenticate with AWS ECR
+  ansible.builtin.shell: |
+    aws ecr get-login-password --region ap-south-1 \
+    | docker login --username AWS --password-stdin {{ ecr_registry }}
+  changed_when: false
+
+- name: Pull Docker image
+  community.docker.docker_image:
+    name: "{{ ecr_registry }}/{{ container_name }}"
+    tag: "{{ image_tag }}"
+    source: pull
+    force_source: yes
+
+- name: Stop and remove existing container
+  community.docker.docker_container:
+    name: "{{ container_name }}"
+    state: absent
+
+- name: Run new container
+  community.docker.docker_container:
+    name: "{{ container_name }}"
+    image: "{{ ecr_registry }}/{{ container_name }}:{{ image_tag }}"
+    state: started
+    restart_policy: always
+    ports:
+      - "{{ host_port }}:3000"
+    env:
+      NODE_ENV: production
+      APP_VERSION: "{{ image_tag }}"
+      DB_HOST: "{{ db_host }}"
+      DB_PASS: "{{ vault_db_password }}"

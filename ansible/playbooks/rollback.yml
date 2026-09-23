@@ -1,0 +1,31 @@
+---
+- name: Rollback to previous release
+  hosts: app_servers
+  become: yes
+
+  tasks:
+    - name: Read the previous tag saved by deploy.yml
+      ansible.builtin.slurp:
+        src: /etc/retailedge_previous_tag
+      register: saved_tag
+      when: previous_tag is not defined
+
+    - name: Decide which tag to restore
+      ansible.builtin.set_fact:
+        previous_tag: "{{ (saved_tag.content | b64decode) | trim }}"
+      when: previous_tag is not defined
+
+    - name: Run previous container image
+      community.docker.docker_container:
+        name: "{{ container_name }}"
+        image: "{{ ecr_registry }}/{{ container_name }}:{{ previous_tag }}"
+        state: started
+        restart_policy: always
+        ports:
+          - "{{ host_port }}:3000"
+        env:
+          NODE_ENV: production
+          APP_VERSION: "{{ previous_tag }}"
+          DB_HOST: "{{ db_host }}"
+          DB_PASS: "{{ vault_db_password }}"
+
