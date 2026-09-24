@@ -24,4 +24,10 @@ describe('RetailEdge API', () => {
     const res = await request(app).get('/api/products/999');
     expect(res.statusCode).toBe(404);
   });
+
+  test('GET /api/info names the service', async () => {
+    const res = await request(app).get('/api/info');
+    expect(res.statusCode).toBe(200);
+    expect(res.body.service).toBe('retailedge-api');
+  });
 });
