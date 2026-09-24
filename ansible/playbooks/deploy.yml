@@ -4,6 +4,9 @@
   become: yes
   gather_facts: false
 
+  vars_files:
+    - ../group_vars/all.yml
+
   pre_tasks:
     - name: Wait until the new server accepts SSH connections
       ansible.builtin.wait_for_connection:
