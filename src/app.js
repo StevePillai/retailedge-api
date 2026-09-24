@@ -29,4 +29,11 @@ app.get('/api/products/:id', (req, res) => {
   return res.json(product);
 });
 
+app.get('/api/info', (req, res) => {
+  res.json({
+    service: 'retailedge-api',
+    version: process.env.APP_VERSION || 'local',
+  });
+});
+
 module.exports = app;
