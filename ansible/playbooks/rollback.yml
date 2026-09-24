@@ -3,9 +3,6 @@
   hosts: app_servers
   become: yes
 
-  vars_files:
-    - ../group_vars/all.yml
-
   tasks:
     - name: Read the previous tag saved by deploy.yml
       ansible.builtin.slurp:
