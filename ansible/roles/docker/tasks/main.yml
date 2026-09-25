@@ -8,9 +8,8 @@
     lock_timeout: 180
 
 - name: Install the Docker SDK for Python (needed by community.docker modules)
-  ansible.builtin.pip:
-    name: docker
-    executable: pip3
+  ansible.builtin.dnf:
+    name: python3-docker
     state: present
 
 - name: Configure the Docker daemon (rotate container logs)
