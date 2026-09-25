@@ -80,6 +80,13 @@ pipeline {
       }
     }
 
+    stage('Approval') {
+      when { expression { env.ENV == 'production' } }
+      steps {
+        input message: "Deploy ${env.IMAGE_TAG} to PRODUCTION?"
+      }
+    }
+
     stage('Terraform Apply') {
       steps {
         dir('terraform') {

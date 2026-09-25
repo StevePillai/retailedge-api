@@ -2,16 +2,25 @@ name: Trigger Jenkins Deploy
 
 on:
   push:
-    branches: [main]
+    branches: [main, 'release/**']
 
 jobs:
   trigger:
     runs-on: ubuntu-latest
     steps:
+      - name: Choose the environment from the branch name
+        id: target
+        run: |
+          if [[ "${GITHUB_REF_NAME}" == release/* ]]; then
+            echo "env=production" >> "$GITHUB_OUTPUT"
+          else
+            echo "env=staging" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Trigger Jenkins Pipeline
         run: |
           curl -fsS -X POST \
             --user "${{ secrets.JENKINS_USER }}:${{ secrets.JENKINS_TOKEN }}" \
             "${{ secrets.JENKINS_URL }}/job/retailedge-deploy/buildWithParameters" \
             --data "COMMIT_SHA=${{ github.sha }}" \
-            --data "ENV=staging"
+            --data "ENV=${{ steps.target.outputs.env }}"
