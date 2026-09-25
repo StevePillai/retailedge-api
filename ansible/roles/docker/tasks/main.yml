@@ -13,6 +13,12 @@
     name: python3-docker
     state: present
 
+- name: Create Docker configuration directory
+  ansible.builtin.file:
+    path: /root/.docker
+    state: directory
+    mode: "0700"
+
 - name: Configure Docker ECR credential helper
   ansible.builtin.copy:
     dest: /root/.docker/config.json
