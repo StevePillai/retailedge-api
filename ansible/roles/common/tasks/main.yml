@@ -21,10 +21,10 @@
     enabled: true
     state: started
 
-- name: Install AWS CLI Python dependencies
+- name: Install AWS CLI
   ansible.builtin.dnf:
     name:
-      - python3-urllib3
+      - awscli
     state: present
 
 - name: Harden SSH (no root login, no passwords)
