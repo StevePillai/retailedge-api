@@ -21,6 +21,12 @@
     enabled: true
     state: started
 
+- name: Install AWS CLI
+  ansible.builtin.dnf:
+    name:
+      - awscli
+    state: present
+
 - name: Harden SSH (no root login, no passwords)
   ansible.builtin.copy:
     dest: /etc/ssh/sshd_config.d/00-hardening.conf
